@@ -1,23 +1,30 @@
 <?php
 require_once( 'db.php');
 require_once('config.php');
-if (array_key_exists('message',$_GET)) {
-  $message = strip_tags($_GET['message']);
+if (array_key_exists('message',$_POST)) {
+  $message = strip_tags($_POST['message']);
 } else {
   $message = '';
 }
-if(!empty($_GET['submit']) && !empty($_GET['username'])) {
-  $_GET['username'] = trim($_GET['username']);
-  if (is_numeric($_GET['username'])) {
+if(!empty($_POST['submit']) && !empty($_POST['username'])) {
+  require_once('recaptchalib.php');
+  $privatekey = "6Ld2Lb8SAAAAAElDy_asi2W_QIi_mCxrZmZcrkvT";
+  $resp = recaptcha_check_answer ($privatekey,$_SERVER["REMOTE_ADDR"],$_POST["recaptcha_challenge_field"],$_POST["recaptcha_response_field"]);
+
+  if (!$resp->is_valid) {
+    die ("The reCAPTCHA wasn't entered correctly. Go back and try it again." . "(reCAPTCHA said: " . $resp->error . ")");
+  } else {
+  $_POST['username'] = trim($_POST['username']);
+  if (is_numeric($_POST['username'])) {
     $message = 'I need a more sensible name to call you by.';
   } else {
     // FIXME: We should transactionify account creation
-    $user = UserQuery::create()->findOneByUsername($_GET['username']);
+    $user = UserQuery::create()->findOneByUsername($_POST['username']);
     if (is_null($user)) {
       $user = new User();
-      $user->setUsername(strip_tags($_GET['username']));
-      $user->setEmail(strip_tags(trim($_GET['email'])));
-      $user->setRealName(strip_tags(trim($_GET['name'])));
+      $user->setUsername(strip_tags($_POST['username']));
+      $user->setEmail(strip_tags(trim($_POST['email'])));
+      $user->setRealName(strip_tags(trim($_POST['name'])));
       $user->save();
       redirect("welcome to the party.");
       die;
@@ -26,13 +33,14 @@ if(!empty($_GET['submit']) && !empty($_GET['username'])) {
     }
   }
 }
+}
 ?>
 <?php include('templates/header.php'); ?>
 
 <center>
 <h1> Do tell me who you are </h1>
 <p class="message"> <?= $message ?> </p>
-<form method="get">
+<form method="post">
 
 <script type="text/javascript">
 $(document).ready(function() {
@@ -46,6 +54,11 @@ $(document).ready(function() {
 <br/>
 <label for="name">and my real name is </label>  <input name="name" type="text" />.
 <br />
+<?php
+  require_once('recaptchalib.php');
+  $publickey = "6Ld2Lb8SAAAAACu5IqSV9Ytm7c39joW_a_tyN2pi";
+  echo recaptcha_get_html($publickey);
+?>
 <input value="and that is who I am." class="submit" type="Submit"/>
 <input type="hidden" name="submit" value="true" />
 </form>
