@@ -1,0 +1,55 @@
+10
+
+dir
+2036
+http://svn.propelorm.org/tags/1.5.2/test/testsuite/runtime
+http://svn.propelorm.org
+
+
+
+2010-06-14T11:45:49.371620Z
+1796
+francois
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+4126deef-30f4-0310-a2a2-883dd235dc3b
+
+connection
+dir
+
+adapter
+dir
+
+formatter
+dir
+
+query
+dir
+
+validator
+dir
+
+collection
+dir
+
+om
+dir
+
+map
+dir
+
+util
+dir
+

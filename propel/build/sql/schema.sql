@@ -3,7 +3,7 @@
 -- user
 -----------------------------------------------------------------------------
 
-DROP TABLE [user];
+--DROP TABLE [user];
 
 
 CREATE TABLE [user]
@@ -24,7 +24,7 @@ CREATE INDEX [user_I_1] ON [user] ([username]);
 -- item
 -----------------------------------------------------------------------------
 
-DROP TABLE [item];
+--DROP TABLE [item];
 
 
 CREATE TABLE [item]
@@ -39,7 +39,7 @@ CREATE TABLE [item]
 -- balance_log
 -----------------------------------------------------------------------------
 
-DROP TABLE [balance_log];
+--DROP TABLE [balance_log];
 
 
 CREATE TABLE [balance_log]
@@ -72,7 +72,7 @@ CREATE TABLE [balance_log]
 -- stock
 -----------------------------------------------------------------------------
 
-DROP TABLE [stock];
+--DROP TABLE [stock];
 
 
 CREATE TABLE [stock]
@@ -96,10 +96,38 @@ CREATE INDEX [stock_I_1] ON [stock] ([item_id]);
 -- FOREIGN KEY ([user_id]) REFERENCES user ([id])
 
 -----------------------------------------------------------------------------
+-- option
+-----------------------------------------------------------------------------
+
+--DROP TABLE [option];
+
+
+CREATE TABLE [option]
+(
+        [id] INTEGER  NOT NULL PRIMARY KEY,
+        [item_id] INTEGER  NOT NULL,
+        [user_id] INTEGER  NOT NULL,
+        [price] DOUBLE  NOT NULL,
+        [created] TIMESTAMP default current_timestamp,
+        [sold_out] INTEGER default 0,
+        [quantity] INTEGER  NOT NULL,
+        [sold] INTEGER default 0 NOT NULL
+);
+
+CREATE INDEX [option_I_1] ON [option] ([item_id]);
+
+-- SQLite does not support foreign keys; this is just for reference
+-- FOREIGN KEY ([item_id]) REFERENCES item ([id])
+
+-- SQLite does not support foreign keys; this is just for reference
+-- FOREIGN KEY ([user_id]) REFERENCES user ([id])
+
+
+-----------------------------------------------------------------------------
 -- purchase
 -----------------------------------------------------------------------------
 
-DROP TABLE [purchase];
+--DROP TABLE [purchase];
 
 
 CREATE TABLE [purchase]
@@ -128,7 +156,7 @@ CREATE INDEX [purchase_I_1] ON [purchase] ([item_id]);
 -- deposit
 -----------------------------------------------------------------------------
 
-DROP TABLE [deposit];
+--DROP TABLE [deposit];
 
 
 CREATE TABLE [deposit]
@@ -146,7 +174,7 @@ CREATE TABLE [deposit]
 -- transfer
 -----------------------------------------------------------------------------
 
-DROP TABLE [transfer];
+--DROP TABLE [transfer];
 
 
 CREATE TABLE [transfer]

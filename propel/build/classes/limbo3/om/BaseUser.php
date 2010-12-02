@@ -83,6 +83,11 @@ abstract class BaseUser extends BaseObject  implements Persistent
 	 */
 	protected $collPurchases;
 
+        /**
+         * @var        array Option[] Collection to store aggregation of Option objects.
+         */
+        protected $collOptions;
+
 	/**
 	 * @var        array Deposit[] Collection to store aggregation of Deposit objects.
 	 */
@@ -510,6 +515,7 @@ abstract class BaseUser extends BaseObject  implements Persistent
 			$this->singleBalanceLog = null;
 			$this->collStocks = null;
 			$this->collPurchases = null;
+			$this->collOptions = null;
 			$this->collDeposits = null;
 			$this->collTransfersRelatedByFromUser = null;
 			$this->collTransfersRelatedByToUser = null;
@@ -668,6 +674,14 @@ abstract class BaseUser extends BaseObject  implements Persistent
 				}
 			}
 
+			if ($this->collOptions !== null) {
+				foreach ($this->collOptions as $referrerFK) {
+					if (!$referrerFK->isDeleted()) {
+						$affectedRows += $referrerFK->save($con);
+					}
+				}
+			}
+
 			if ($this->collDeposits !== null) {
 				foreach ($this->collDeposits as $referrerFK) {
 					if (!$referrerFK->isDeleted()) {
@@ -784,6 +798,14 @@ abstract class BaseUser extends BaseObject  implements Persistent
 						}
 					}
 				}
+
+				if ($this->collOptions !== null) {
+                                        foreach ($this->collOptions as $referrerFK) {
+                                                if (!$referrerFK->validate($columns)) {
+                                                        $failureMap = array_merge($failureMap, $referrerFK->getValidationFailures());
+                                                }
+                                        }
+                                }
 
 				if ($this->collDeposits !== null) {
 					foreach ($this->collDeposits as $referrerFK) {
@@ -1084,6 +1106,12 @@ abstract class BaseUser extends BaseObject  implements Persistent
 				}
 			}
 
+			foreach ($this->getOptions() as $relObj) {
+				if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+					$copyObj->addOption($relObj->copy($deepCopy));
+				}
+			}
+
 			foreach ($this->getDeposits() as $relObj) {
 				if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
 					$copyObj->addDeposit($relObj->copy($deepCopy));
@@ -1197,6 +1225,20 @@ abstract class BaseUser extends BaseObject  implements Persistent
 		$this->collStocks = null; // important to set this to NULL since that means it is uninitialized
 	}
 
+        /**
+         * Clears out the collOptions collection
+         *
+         * This does not modify the database; however, it will remove any associated objects, causing
+         * them to be refetched by subsequent calls to accessor method.
+         *
+         * @return     void
+         * @see        addOptions()
+         */
+        public function clearOptions()
+        {
+                $this->collOptions = null; // important to set this to NULL since that means it is uninitialized
+        }
+
 	/**
 	 * Initializes the collStocks collection.
 	 *
@@ -1211,6 +1253,21 @@ abstract class BaseUser extends BaseObject  implements Persistent
 		$this->collStocks = new PropelObjectCollection();
 		$this->collStocks->setModel('Stock');
 	}
+
+        /**
+         * Initializes the collOptions collection.
+         *
+         * By default this just sets the collOptions collection to an empty array (like clearcollOptions());
+         * however, you may wish to override this method in your stub class to provide setting appropriate
+         * to your application -- for example, setting the initial array to the values stored in database.
+         *
+         * @return     void
+         */
+        public function initOptions()
+        {
+                $this->collOptions = new PropelObjectCollection();
+                $this->collOptions->setModel('Option');
+        }
 
 	/**
 	 * Gets an array of Stock objects which contain a foreign key that references this object.
@@ -1245,6 +1302,40 @@ abstract class BaseUser extends BaseObject  implements Persistent
 		return $this->collStocks;
 	}
 
+        /**
+         * Gets an array of Option objects which contain a foreign key that references this object.
+         *
+         * If the $criteria is not null, it is used to always fetch the results from the database.
+         * Otherwise the results are fetched from the database the first time, then cached.
+         * Next time the same method is called without $criteria, the cached collection is returned.
+         * If this User is new, it will return
+         * an empty collection or the current collection; the criteria is ignored on a new object.
+         *
+         * @param      Criteria $criteria optional Criteria object to narrow the query
+         * @param      PropelPDO $con optional connection object
+         * @return     PropelCollection|array Option[] List of Option objects
+         * @throws     PropelException
+         */
+        public function getOptions($criteria = null, PropelPDO $con = null)
+        {
+                if(null === $this->collOptions || null !== $criteria) {
+                        if ($this->isNew() && null === $this->collOptions) {
+                                // return empty collection
+                                $this->initOptions();
+                        } else {
+                                $collOptions = OptionQuery::create(null, $criteria)
+                                        ->filterByUser($this)
+                                        ->find($con);
+                                if (null !== $criteria) {
+                                        return $collOptions;
+                                }
+                                $this->collOptions = $collOptions;
+                        }
+                }
+                return $this->collOptions;
+        }
+
+
 	/**
 	 * Returns the number of related Stock objects.
 	 *
@@ -1273,6 +1364,35 @@ abstract class BaseUser extends BaseObject  implements Persistent
 		}
 	}
 
+        /**
+         * Returns the number of related Option objects.
+         *
+         * @param      Criteria $criteria
+         * @param      boolean $distinct
+         * @param      PropelPDO $con
+         * @return     int Count of related Option objects.
+         * @throws     PropelException
+         */
+        public function countOptions(Criteria $criteria = null, $distinct = false, PropelPDO $con = null)
+        {
+                if(null === $this->collOptions || null !== $criteria) {
+                        if ($this->isNew() && null === $this->collOptions) {
+                                return 0;
+                        } else {
+                                $query = OptionQuery::create(null, $criteria);
+                                if($distinct) {
+                                        $query->distinct();
+                                }
+                                return $query
+                                        ->filterByUser($this)
+                                        ->count($con);
+                        }
+                } else {
+                        return count($this->collOptions);
+                }
+        }
+
+
 	/**
 	 * Method called to associate a Stock object to this object
 	 * through the Stock foreign key attribute.
@@ -1292,6 +1412,24 @@ abstract class BaseUser extends BaseObject  implements Persistent
 		}
 	}
 
+        /**
+         * Method called to associate a Option object to this object
+         * through the Stock foreign key attribute.
+         *
+         * @param      Option $l Option
+         * @return     void
+         * @throws     PropelException
+         */
+        public function addOption(Option $l)
+        {
+                if ($this->collOptions === null) {
+                        $this->initOptions();
+                }
+                if (!$this->collOptions->contains($l)) { // only add it if the **same** object is not already associated
+                        $this->collOptions[]= $l;
+                        $l->setUser($this);
+                }
+        }
 
 	/**
 	 * If this collection has already been initialized with
@@ -1316,6 +1454,31 @@ abstract class BaseUser extends BaseObject  implements Persistent
 
 		return $this->getStocks($query, $con);
 	}
+
+        /**
+         * If this collection has already been initialized with
+         * an identical criteria, it returns the collection.
+         * Otherwise if this User is new, it will return
+         * an empty collection; or if this User has previously
+         * been saved, it will retrieve related Stocks from storage.
+         *
+         * This method is protected by default in order to keep the public
+         * api reasonable.  You can provide public methods for those you
+         * actually need in User.
+         *
+         * @param      Criteria $criteria optional Criteria object to narrow the query
+         * @param      PropelPDO $con optional connection object
+         * @param      string $join_behavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+         * @return     PropelCollection|array Option[] List of Option objects
+         */
+        public function getOptionsJoinItem($criteria = null, $con = null, $join_behavior = Criteria::LEFT_JOIN)
+        {
+                $query = OptionQuery::create(null, $criteria);
+                $query->joinWith('Item', $join_behavior);
+
+                return $this->getOptions($query, $con);
+        }
+
 
 	/**
 	 * Clears out the collPurchases collection
@@ -1849,6 +2012,11 @@ abstract class BaseUser extends BaseObject  implements Persistent
 					$o->clearAllReferences($deep);
 				}
 			}
+			if ($this->collOptions) {
+				foreach ((array) $this->collOptions as $o) {
+					$o->clearAllReferences($deep);
+				}
+			}
 			if ($this->collDeposits) {
 				foreach ((array) $this->collDeposits as $o) {
 					$o->clearAllReferences($deep);
@@ -1869,6 +2037,7 @@ abstract class BaseUser extends BaseObject  implements Persistent
 		$this->singleBalanceLog = null;
 		$this->collStocks = null;
 		$this->collPurchases = null;
+		$this->collOptions = null;
 		$this->collDeposits = null;
 		$this->collTransfersRelatedByFromUser = null;
 		$this->collTransfersRelatedByToUser = null;

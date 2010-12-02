@@ -8,7 +8,7 @@ if (array_key_exists('message',$_POST)) {
 }
 if(!empty($_POST['submit']) && !empty($_POST['username'])) {
   require_once('recaptchalib.php');
-  $privatekey = "6Ld2Lb8SAAAAAElDy_asi2W_QIi_mCxrZmZcrkvT";
+  $privatekey = "6LeiR78SAAAAAD2B_KoFz01GIb290ArC_QEPzDJ9";
   $resp = recaptcha_check_answer ($privatekey,$_SERVER["REMOTE_ADDR"],$_POST["recaptcha_challenge_field"],$_POST["recaptcha_response_field"]);
 
   if (!$resp->is_valid) {
@@ -56,7 +56,7 @@ $(document).ready(function() {
 <br />
 <?php
   require_once('recaptchalib.php');
-  $publickey = "6Ld2Lb8SAAAAACu5IqSV9Ytm7c39joW_a_tyN2pi";
+  $publickey = "6LeiR78SAAAAAAcPaRuBSFk0nzbFiGQZkfNyj06N";
   echo recaptcha_get_html($publickey);
 ?>
 <input value="and that is who I am." class="submit" type="Submit"/>

@@ -61,7 +61,7 @@ function deposit($user, $amount) {
     }
   }
   return false;
-  
+
 }
 
 
@@ -116,6 +116,7 @@ function purchase($user, $items) {
     foreach($items as $item) {
       $stock = $item[0];
       $count = $item[1];
+      $option_list = OptionQuery::create()->findByUserId($user);
       $item_obj = $stock->getItem();
       $stock_quantity = $stock->getQuantity() - $stock->getSold();
       if ($stock_quantity < $count) {
@@ -135,6 +136,15 @@ function purchase($user, $items) {
 	$stock->setSoldOut(true);
       }
       $stock->save();
+      foreach ($option_list as $option) {
+        if ($option->getItem() == $item_obj && $option->getPrice() >= $stock->getPrice()) {
+          $option->setSold($option->getSold() + $count);
+          if ($option->getQuantity() == $option->getSold()) {
+            $option->setSoldOut(true);
+          }
+          $option->save();
+        }
+      }
       $total_price += $cost;
     }
     // deal w/ the money
@@ -165,4 +175,5 @@ function purchase($user, $items) {
   }
   return false;
 }
+
 ?>
