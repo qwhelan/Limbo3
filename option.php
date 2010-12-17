@@ -72,11 +72,12 @@ $(document).ready(function() {
   if (count($options) > 0) {
     echo "<h2> Personal Issued Options </h2>\n";
     echo "<table>";
-    echo "<tr><th>Item</th><th>Issued</th><th>Max Price</th><th>Fulfilled</th></tr>";
+    echo "<tr><th>Item</th><th>Issued</th><th>Expires</th><th>Max Price</th><th>Fulfilled</th></tr>";
     foreach($options as $option) { ?>
       <tr>
       <td><?= $option->getItem()->getName() ?> </td>
       <td><?= $option->getCreated() ?> </td>
+      <td><?= $option->getExpires() ?> </td>
       <td><?= format_currency($option->getPrice()) ?> </td>
       <td><?= $option->getSold() ?>/<?=$option->getQuantity() ?> </td>
       </tr>
