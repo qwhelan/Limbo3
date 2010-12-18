@@ -9,11 +9,16 @@ if(!empty($username)) {
   $user = UserQuery::create()->findOneByUsername($username);
   if (is_null($user)) {
     redirect("i've never heard of you before",'register.php');
+  } elseif($user->getEmail() == "") {
+    redirect_no_message('get_email.php?username=' . $username);
   }
 } else {
   redirect();
 }
 
+if($user->getEmail() == "") {
+  redirect("",'get_email.php?username=' . $username);
+}
 
 ?>
 <?php include( 'templates/header.php'); ?>

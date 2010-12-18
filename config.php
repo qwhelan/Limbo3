@@ -11,6 +11,12 @@ function redirect($message='', $page='') {
   exit;
 }
 
+function redirect_no_message($page='') {
+  global $domain, $path;
+  header("Location: $domain$path$page");
+  exit;
+}
+
 function quote($str){
   return '"' . $str . '"';
 }
